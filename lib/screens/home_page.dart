@@ -40,18 +40,15 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               'Today, April 25, 2024',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
 
             const SizedBox(height: 24),
 
             /// ADD EXPENSE
             _primaryButton(
-              color: const Color(0xFF5E8D68),
-              icon: Icons.add,
+              gradientColors: const [Color(0xFFD32F2F), Color(0xFFB71C1C)],
+              icon: Icons.remove_circle_outline,
               text: 'Add Expense',
               onTap: () {
                 showDialog(
@@ -66,10 +63,9 @@ class HomePage extends StatelessWidget {
 
             /// ADD INCOME
             _primaryButton(
-              color: const Color(0xFFF6D58E),
-              icon: Icons.currency_rupee,
+              gradientColors: const [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+              icon: Icons.add_circle_outline,
               text: 'Add Income',
-              textColor: Colors.black87,
               onTap: () {
                 showDialog(
                   context: context,
@@ -83,10 +79,7 @@ class HomePage extends StatelessWidget {
 
             const Text(
               'Select Crop',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
 
@@ -100,10 +93,7 @@ class HomePage extends StatelessWidget {
 
             const Text(
               'Recent Transactions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
 
@@ -113,12 +103,7 @@ class HomePage extends StatelessWidget {
               '- ₹837',
               Colors.red,
             ),
-            _transactionTile(
-              Icons.restaurant,
-              'Food',
-              '- ₹300',
-              Colors.red,
-            ),
+            _transactionTile(Icons.restaurant, 'Food', '- ₹300', Colors.red),
             _transactionTile(
               Icons.eco,
               'Papaya Sale',
@@ -134,33 +119,45 @@ class HomePage extends StatelessWidget {
   // ================= BUTTON =================
 
   static Widget _primaryButton({
-    required Color color,
+    required List<Color> gradientColors,
     required IconData icon,
     required String text,
     required VoidCallback onTap,
     Color textColor = Colors.white,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: 56,
+        height: 60,
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors.last.withOpacity(0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: textColor),
-            const SizedBox(width: 8),
+            Icon(icon, color: textColor, size: 22),
+            const SizedBox(width: 10),
             Text(
               text,
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: textColor,
+                letterSpacing: 0.3,
               ),
             ),
           ],
@@ -170,33 +167,37 @@ class HomePage extends StatelessWidget {
   }
 
   // ================= CROPS =================
+       static Widget _cropRow() {
+  final crops = ['All','Papaya', 'Banana', 'Dragon', 'Turmeric', 'General'];
 
-  static Widget _cropRow() {
-    final crops = ['Papaya', 'Banana', 'Dragon', 'Turmeric', 'General'];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: crops
-          .map(
-            (crop) => Container(
-              width: 70,
-              height: 90,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF3EA),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(
-                  crop,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12),
-                ),
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: List.generate(crops.length, (index) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 8), // 👈 GAP BETWEEN ITEMS
+          child: Container(
+            width: 70,
+            height: 90,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF3EA),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(
+                crops[index],
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12),
               ),
             ),
-          )
-          .toList(),
-    );
-  }
+          ),
+        );
+      }),
+    ),
+  );
+}
+
+
 
   // ================= SUMMARY =================
 
@@ -219,11 +220,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  static Widget _summaryRow(
-    String label,
-    String value,
-    Color color,
-  ) {
+  static Widget _summaryRow(String label, String value, Color color) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -253,10 +250,7 @@ class HomePage extends StatelessWidget {
       title: Text(title),
       trailing: Text(
         amount,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }

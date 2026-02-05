@@ -61,6 +61,7 @@ class _AddIncomeDialogState extends State<AddIncomeDialog> {
                       'Add Income',
                       style: TextStyle(
                         fontSize: 18,
+                        color: Color.fromARGB(255, 10, 85, 0),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

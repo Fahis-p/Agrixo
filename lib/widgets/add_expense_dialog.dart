@@ -27,6 +27,7 @@ class AddExpenseDialog extends StatelessWidget {
                       'Add Expense',
                       style: TextStyle(
                         fontSize: 18,
+                        color: Colors.red,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
