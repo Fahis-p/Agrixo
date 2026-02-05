@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/add_expense_dialog.dart';
 import '../widgets/add_income_dialog.dart';
+import '../models/crop_item.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -167,35 +168,56 @@ class HomePage extends StatelessWidget {
   }
 
   // ================= CROPS =================
-       static Widget _cropRow() {
-  final crops = ['All','Papaya', 'Banana', 'Dragon', 'Turmeric', 'General'];
+      static Widget _cropRow() {
+  final List<CropItem> crops = const [
+  CropItem(name: 'All', iconPath: 'assets/icons/crops/all.png'),
+  CropItem(name: 'Papaya', iconPath: 'assets/icons/crops/pappaya.png'),
+  CropItem(name: 'Banana', iconPath: 'assets/icons/crops/banana.png'),
+  CropItem(name: 'Dragon', iconPath: 'assets/icons/crops/dragon.png'),
+  CropItem(name: 'Turmeric', iconPath: 'assets/icons/crops/turmeric.png'),
+  CropItem(name: 'General', iconPath: 'assets/icons/crops/general.png'),
+];
 
   return SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: Row(
-      children: List.generate(crops.length, (index) {
+      children: crops.map((crop) {
         return Padding(
-          padding: const EdgeInsets.only(right: 8), // 👈 GAP BETWEEN ITEMS
+          padding: const EdgeInsets.only(right: 10),
           child: Container(
-            width: 70,
-            height: 90,
+            width: 80,
+            height: 100,
             decoration: BoxDecoration(
               color: const Color(0xFFEAF3EA),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Center(
-              child: Text(
-                crops[index],
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12),
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  crop.iconPath,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  crop.name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         );
-      }),
+      }).toList(),
     ),
   );
 }
+
 
 
 
