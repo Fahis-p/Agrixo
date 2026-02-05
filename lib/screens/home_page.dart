@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../widgets/add_expense_dialog.dart';
+import '../widgets/add_income_dialog.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -25,6 +27,7 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -37,33 +40,53 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               'Today, April 25, 2024',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
 
             const SizedBox(height: 24),
 
-            /// Add Expense
+            /// ADD EXPENSE
             _primaryButton(
               color: const Color(0xFF5E8D68),
               icon: Icons.add,
               text: 'Add Expense',
+              onTap: () {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const AddExpenseDialog(),
+                );
+              },
             ),
 
             const SizedBox(height: 16),
 
-            /// Add Income
+            /// ADD INCOME
             _primaryButton(
               color: const Color(0xFFF6D58E),
               icon: Icons.currency_rupee,
               text: 'Add Income',
               textColor: Colors.black87,
+              onTap: () {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const AddIncomeDialog(),
+                );
+              },
             ),
 
             const SizedBox(height: 28),
 
             const Text(
               'Select Crop',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -77,7 +100,10 @@ class HomePage extends StatelessWidget {
 
             const Text(
               'Recent Transactions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -87,7 +113,12 @@ class HomePage extends StatelessWidget {
               '- ₹837',
               Colors.red,
             ),
-            _transactionTile(Icons.restaurant, 'Food', '- ₹300', Colors.red),
+            _transactionTile(
+              Icons.restaurant,
+              'Food',
+              '- ₹300',
+              Colors.red,
+            ),
             _transactionTile(
               Icons.eco,
               'Papaya Sale',
@@ -100,38 +131,45 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // ---------- UI helpers ----------
+  // ================= BUTTON =================
 
   static Widget _primaryButton({
     required Color color,
     required IconData icon,
     required String text,
+    required VoidCallback onTap,
     Color textColor = Colors.white,
   }) {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: textColor),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: textColor,
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: textColor),
+            const SizedBox(width: 8),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
+  // ================= CROPS =================
 
   static Widget _cropRow() {
     final crops = ['Papaya', 'Banana', 'Dragon', 'Turmeric', 'General'];
@@ -140,7 +178,7 @@ class HomePage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: crops
           .map(
-            (c) => Container(
+            (crop) => Container(
               width: 70,
               height: 90,
               decoration: BoxDecoration(
@@ -149,7 +187,7 @@ class HomePage extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  c,
+                  crop,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12),
                 ),
@@ -159,6 +197,8 @@ class HomePage extends StatelessWidget {
           .toList(),
     );
   }
+
+  // ================= SUMMARY =================
 
   static Widget _summaryCard() {
     return Container(
@@ -179,7 +219,11 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  static Widget _summaryRow(String label, String value, Color valueColor) {
+  static Widget _summaryRow(
+    String label,
+    String value,
+    Color color,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -189,12 +233,14 @@ class HomePage extends StatelessWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: valueColor,
+            color: color,
           ),
         ),
       ],
     );
   }
+
+  // ================= TRANSACTIONS =================
 
   static Widget _transactionTile(
     IconData icon,
@@ -207,7 +253,10 @@ class HomePage extends StatelessWidget {
       title: Text(title),
       trailing: Text(
         amount,
-        style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
