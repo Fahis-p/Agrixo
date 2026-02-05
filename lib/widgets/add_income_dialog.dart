@@ -1,7 +1,41 @@
 import 'package:flutter/material.dart';
 
-class AddIncomeDialog extends StatelessWidget {
+class AddIncomeDialog extends StatefulWidget {
   const AddIncomeDialog({super.key});
+
+  @override
+  State<AddIncomeDialog> createState() => _AddIncomeDialogState();
+}
+
+class _AddIncomeDialogState extends State<AddIncomeDialog> {
+  String? selectedCategory;
+  String? selectedType;
+
+  List<String> typeOptions = [];
+
+  void _onCategoryChanged(String? value) {
+    setState(() {
+      selectedCategory = value;
+      selectedType = null;
+
+      if (value == 'Sales') {
+        typeOptions = [
+          'Papaya',
+          'Dragon Fruit',
+          'Passion Fruit',
+          'Banana',
+          'Other',
+        ];
+      } else if (value == 'Capital') {
+        typeOptions = [
+          'Kunheedu',
+          'Mujeeb',
+        ];
+      } else {
+        typeOptions = [];
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +73,11 @@ class AddIncomeDialog extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                /// Type
-                const Text('Type'),
+                /// Category
+                const Text('Category'),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
+                  value: selectedCategory,
                   items: const [
                     DropdownMenuItem(
                       value: 'Sales',
@@ -53,8 +88,61 @@ class AddIncomeDialog extends StatelessWidget {
                       child: Text('Capital'),
                     ),
                   ],
-                  onChanged: (_) {},
+                  onChanged: _onCategoryChanged,
                   decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                /// Type (dynamic)
+                const Text('Type'),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  items: typeOptions
+                      .map(
+                        (type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(type),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: typeOptions.isEmpty
+                      ? null
+                      : (value) {
+                          setState(() {
+                            selectedType = value;
+                          });
+                        },
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                /// Amount
+                const Text('Amount'),
+                const SizedBox(height: 6),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    prefixText: '₹ ',
+                    hintText: 'Enter amount',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                /// Description
+                const Text('Description'),
+                const SizedBox(height: 6),
+                const TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Enter description',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -74,7 +162,7 @@ class AddIncomeDialog extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          // Save income later
+                          // Save income logic later
                           Navigator.pop(context);
                         },
                         child: const Text('Add Income'),

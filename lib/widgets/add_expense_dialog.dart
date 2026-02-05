@@ -44,21 +44,51 @@ class AddExpenseDialog extends StatelessWidget {
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   items: const [
-                    DropdownMenuItem(
-                      value: 'Papaya',
-                      child: Text('Papaya'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Banana',
-                      child: Text('Banana'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'General',
-                      child: Text('General'),
-                    ),
+                    DropdownMenuItem(value: 'Papaya', child: Text('Papaya')),
+                    DropdownMenuItem(value: 'Banana', child: Text('Banana')),
+                    DropdownMenuItem(value: 'General', child: Text('General')),
                   ],
                   onChanged: (_) {},
                   decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                /// Expense Type
+                const Text('Type'),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'Fertilizer', child: Text('Fertilizer')),
+                    DropdownMenuItem(
+                        value: 'Seed Purchase', child: Text('Seed Purchase')),
+                    DropdownMenuItem(
+                        value: 'Plant Purchase', child: Text('Plant Purchase')),
+                    DropdownMenuItem(
+                        value: 'Labour', child: Text('Labour')),
+                    DropdownMenuItem(
+                        value: 'Equipment', child: Text('Equipment')),
+                    DropdownMenuItem(value: 'Other', child: Text('Other')),
+                  ],
+                  onChanged: (_) {},
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                /// Amount (NEW)
+                const Text('Amount'),
+                const SizedBox(height: 6),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    prefixText: '₹ ',
+                    hintText: 'Enter amount',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -90,7 +120,7 @@ class AddExpenseDialog extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          // Save expense later
+                          // Save expense logic later
                           Navigator.pop(context);
                         },
                         child: const Text('Add Expense'),
