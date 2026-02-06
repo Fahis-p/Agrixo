@@ -97,7 +97,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 const Text('Category'),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   items: const [
                     DropdownMenuItem(value: 'Papaya', child: Text('Papaya')),
                     DropdownMenuItem(value: 'Banana', child: Text('Banana')),
@@ -115,7 +115,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 const Text('Type'),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
-                  value: type,
+                  initialValue: type,
                   items: const [
                     DropdownMenuItem(
                         value: 'Fertilizer', child: Text('Fertilizer')),

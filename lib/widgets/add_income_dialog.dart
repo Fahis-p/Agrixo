@@ -112,7 +112,7 @@ class _AddIncomeDialogState extends State<AddIncomeDialog> {
               const Text('Category'),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: selectedCategory,
+                initialValue: selectedCategory,
                 items: const [
                   DropdownMenuItem(value: 'Sales', child: Text('Sales')),
                   DropdownMenuItem(value: 'Capital', child: Text('Capital')),
@@ -129,7 +129,7 @@ class _AddIncomeDialogState extends State<AddIncomeDialog> {
               const Text('Type'),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: selectedType,
+                initialValue: selectedType,
                 items: typeOptions
                     .map(
                       (t) => DropdownMenuItem(

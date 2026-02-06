@@ -1,10 +1,37 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+
 import '../widgets/add_expense_dialog.dart';
 import '../widgets/add_income_dialog.dart';
-import '../models/crop_item.dart';
+import '../screens/configuration_page.dart';
+import '../models/category_model.dart';
+import '../services/category_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<CategoryModel> expenseCategories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final list = await CategoryService.getLastCategories(
+    type: 'expense',
+    limit: 50,
+  );
+    setState(() {
+      expenseCategories = list;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +53,16 @@ class HomePage extends StatelessWidget {
             icon: const Icon(Icons.notifications_none),
             onPressed: () {},
           ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ConfigurationPage()),
+              );
+              _loadCategories(); // 🔄 refresh when coming back
+            },
+          ),
         ],
       ),
 
@@ -40,13 +77,12 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Today, April 25, 2024',
+              'Today',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
 
             const SizedBox(height: 24),
 
-            /// ADD EXPENSE
             _primaryButton(
               gradientColors: const [Color(0xFFD32F2F), Color(0xFFB71C1C)],
               icon: Icons.remove_circle_outline,
@@ -62,7 +98,6 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            /// ADD INCOME
             _primaryButton(
               gradientColors: const [Color(0xFF2E7D32), Color(0xFF1B5E20)],
               icon: Icons.add_circle_outline,
@@ -90,14 +125,12 @@ class HomePage extends StatelessWidget {
 
             _summaryCard(),
 
-            const SizedBox(height: 28),
-
+            const SizedBox(height: 20),
             const Text(
               'Recent Transactions',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
-
             _transactionTile(
               Icons.local_gas_station,
               'Diesel',
@@ -117,9 +150,8 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // ================= BUTTON =================
-
-  static Widget _primaryButton({
+  // ================= buttons =================
+  Widget _primaryButton({
     required List<Color> gradientColors,
     required IconData icon,
     required String text,
@@ -168,62 +200,68 @@ class HomePage extends StatelessWidget {
   }
 
   // ================= CROPS =================
-      static Widget _cropRow() {
-  final List<CropItem> crops = const [
-  CropItem(name: 'All', iconPath: 'assets/icons/crops/all.png'),
-  CropItem(name: 'Papaya', iconPath: 'assets/icons/crops/pappaya.png'),
-  CropItem(name: 'Banana', iconPath: 'assets/icons/crops/banana.png'),
-  CropItem(name: 'Dragon', iconPath: 'assets/icons/crops/dragon.png'),
-  CropItem(name: 'Turmeric', iconPath: 'assets/icons/crops/turmeric.png'),
-  CropItem(name: 'General', iconPath: 'assets/icons/crops/general.png'),
-];
 
-  return SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: Row(
-      children: crops.map((crop) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 10),
-          child: Container(
-            width: 80,
-            height: 100,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEAF3EA),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  crop.iconPath,
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  crop.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+  Widget _cropRow() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _cropTile(
+            name: 'All',
+            icon: Image.asset(
+              'assets/icons/crops/all.png',
+              width: 40,
+              height: 40,
             ),
           ),
-        );
-      }).toList(),
-    ),
-  );
-}
 
+          ...expenseCategories.map((cat) {
+            return _cropTile(
+              name: cat.name,
+              icon: cat.iconPath != null
+                  ? Image.file(
+                      File(cat.iconPath!),
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    )
+                  : const Icon(Icons.category, size: 40),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
 
-
+  Widget _cropTile({required String name, required Widget icon}) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
+      child: Container(
+        width: 80,
+        height: 100,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF3EA),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icon,
+            const SizedBox(height: 8),
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // ================= SUMMARY =================
 
-  static Widget _summaryCard() {
+  Widget _summaryCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -231,18 +269,37 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        children: [
-          _summaryRow('Today Expense', '₹837', Colors.red),
-          const Divider(),
-          _summaryRow('Today Income', '₹2,500', Colors.green),
-          const Divider(),
-          _summaryRow('Balance', '₹1,663', Colors.green),
+        children: const [
+          _SummaryRow(label: 'Today Expense', value: '₹837', color: Colors.red),
+          Divider(),
+          _SummaryRow(
+            label: 'Today Income',
+            value: '₹2,500',
+            color: Colors.green,
+          ),
+          Divider(),
+          _SummaryRow(label: 'Balance', value: '₹1,663', color: Colors.green),
         ],
       ),
     );
   }
+}
 
-  static Widget _summaryRow(String label, String value, Color color) {
+// ================= SMALL WIDGETS =================
+
+class _SummaryRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -258,22 +315,16 @@ class HomePage extends StatelessWidget {
       ],
     );
   }
+}
 
-  // ================= TRANSACTIONS =================
-
-  static Widget _transactionTile(
-    IconData icon,
-    String title,
-    String amount,
-    Color color,
-  ) {
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(title),
-      trailing: Text(
-        amount,
-        style: TextStyle(color: color, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
+// ================= TRANSACTIONS =================
+_transactionTile(IconData icon, String title, String amount, Color color) {
+  return ListTile(
+    leading: Icon(icon, color: color),
+    title: Text(title),
+    trailing: Text(
+      amount,
+      style: TextStyle(color: color, fontWeight: FontWeight.w600),
+    ),
+  );
 }
