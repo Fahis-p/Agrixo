@@ -1,7 +1,60 @@
 import 'package:flutter/material.dart';
+import '../models/transaction_model.dart';
+import '../services/transaction_service.dart';
 
-class AddExpenseDialog extends StatelessWidget {
+class AddExpenseDialog extends StatefulWidget {
   const AddExpenseDialog({super.key});
+
+  @override
+  State<AddExpenseDialog> createState() => _AddExpenseDialogState();
+}
+
+class _AddExpenseDialogState extends State<AddExpenseDialog> {
+  String? category;
+  String? type;
+
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveExpense() async {
+    if (category == null || type == null || amountController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
+    final amount = double.tryParse(amountController.text);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid amount')),
+      );
+      return;
+    }
+
+    final expense = TransactionModel(
+      type: 'expense',
+      category: category!,
+      subType: type!,
+      amount: amount,
+      description: descriptionController.text,
+      crop: category!, // using category as crop for now
+      date: DateTime.now().toIso8601String().split('T').first,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    );
+
+    await TransactionService.addExpense(expense);
+    await TransactionService.printAllTransactions();
+
+    Navigator.pop(context); // close dialog
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +72,7 @@ class AddExpenseDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// Header
+                /// HEADER
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -40,16 +93,17 @@ class AddExpenseDialog extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                /// Category
+                /// CATEGORY
                 const Text('Category'),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
+                  value: category,
                   items: const [
                     DropdownMenuItem(value: 'Papaya', child: Text('Papaya')),
                     DropdownMenuItem(value: 'Banana', child: Text('Banana')),
                     DropdownMenuItem(value: 'General', child: Text('General')),
                   ],
-                  onChanged: (_) {},
+                  onChanged: (v) => setState(() => category = v),
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                   ),
@@ -57,10 +111,11 @@ class AddExpenseDialog extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                /// Expense Type
+                /// EXPENSE TYPE
                 const Text('Type'),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
+                  value: type,
                   items: const [
                     DropdownMenuItem(
                         value: 'Fertilizer', child: Text('Fertilizer')),
@@ -68,13 +123,12 @@ class AddExpenseDialog extends StatelessWidget {
                         value: 'Seed Purchase', child: Text('Seed Purchase')),
                     DropdownMenuItem(
                         value: 'Plant Purchase', child: Text('Plant Purchase')),
-                    DropdownMenuItem(
-                        value: 'Labour', child: Text('Labour')),
+                    DropdownMenuItem(value: 'Labour', child: Text('Labour')),
                     DropdownMenuItem(
                         value: 'Equipment', child: Text('Equipment')),
                     DropdownMenuItem(value: 'Other', child: Text('Other')),
                   ],
-                  onChanged: (_) {},
+                  onChanged: (v) => setState(() => type = v),
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                   ),
@@ -82,10 +136,11 @@ class AddExpenseDialog extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                /// Amount (NEW)
+                /// AMOUNT
                 const Text('Amount'),
                 const SizedBox(height: 6),
                 TextField(
+                  controller: amountController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     prefixText: '₹ ',
@@ -96,19 +151,21 @@ class AddExpenseDialog extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                /// Description
+                /// DESCRIPTION
                 const Text('Description'),
                 const SizedBox(height: 6),
-                const TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter description',
+                TextField(
+                  controller: descriptionController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    hintText: 'Optional notes',
                     border: OutlineInputBorder(),
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                /// Actions
+                /// ACTION BUTTONS
                 Row(
                   children: [
                     Expanded(
@@ -120,10 +177,7 @@ class AddExpenseDialog extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Save expense logic later
-                          Navigator.pop(context);
-                        },
+                        onPressed: _saveExpense,
                         child: const Text('Add Expense'),
                       ),
                     ),
