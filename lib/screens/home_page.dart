@@ -97,14 +97,14 @@ class _HomePageState extends State<HomePage> {
     final Map<String, String> map = {};
 
     for (final t in expenseTypes) {
-      if (t.emoji != null && t.emoji!.isNotEmpty) {
-        map[t.name] = t.emoji!;
+      if (t.emoji.isNotEmpty) {
+        map[t.name] = t.emoji;
       }
     }
 
     for (final t in incomeTypes) {
-      if (t.emoji != null && t.emoji!.isNotEmpty) {
-        map[t.name] = t.emoji!;
+      if (t.emoji.isNotEmpty) {
+        map[t.name] = t.emoji;
       }
     }
 

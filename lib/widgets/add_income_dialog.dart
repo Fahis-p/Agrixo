@@ -162,7 +162,7 @@ class _AddIncomeDialogState extends State<AddIncomeDialog> {
               isLoadingCategories
                   ? const Center(child: CircularProgressIndicator())
                   : DropdownButtonFormField<CategoryModel>(
-                      value: selectedCategory,
+                      initialValue: selectedCategory,
                       items: categories.map((cat) {
                         return DropdownMenuItem(
                           value: cat,
@@ -195,7 +195,7 @@ class _AddIncomeDialogState extends State<AddIncomeDialog> {
                 const Center(child: CircularProgressIndicator())
               else
                 DropdownButtonFormField<ExpenseTypeModel>(
-                  value: selectedType,
+                  initialValue: selectedType,
                   items: incomeTypes.map((t) {
                     return DropdownMenuItem(
                       value: t,

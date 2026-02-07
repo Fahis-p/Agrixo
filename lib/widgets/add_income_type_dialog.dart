@@ -87,7 +87,7 @@ Widget build(BuildContext context) {
                   const Text('Income Category'),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<CategoryModel>(
-                    value: selectedCategory,
+                    initialValue: selectedCategory,
                     items: incomeCategories
                         .map(
                           (c) => DropdownMenuItem(

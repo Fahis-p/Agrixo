@@ -159,7 +159,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 isLoadingCategories
                     ? const Center(child: CircularProgressIndicator())
                     : DropdownButtonFormField<CategoryModel>(
-                        value: selectedCategory,
+                        initialValue: selectedCategory,
                         items: categories.map((cat) {
                           return DropdownMenuItem(
                             value: cat,
@@ -182,7 +182,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 isLoadingTypes
                     ? const Center(child: CircularProgressIndicator())
                     : DropdownButtonFormField<ExpenseTypeModel>(
-                        value: selectedType,
+                        initialValue: selectedType,
                         items: expenseTypes.map((t) {
                           return DropdownMenuItem(
                             value: t,

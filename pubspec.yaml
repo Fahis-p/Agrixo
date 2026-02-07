@@ -50,6 +50,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  flutter_launcher_icons: ^0.13.1
+
+  flutter_native_splash: ^2.4.0
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -63,6 +67,7 @@ flutter:
 
   assets:
     - assets/icons/crops/
+    - assets/icons/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -94,3 +99,20 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_icons:
+  android: true
+  ios: false
+  image_path: assets/icons/agrixo_icon.png
+  adaptive_icon_background: "#FFFFFF"
+  remove_alpha_android: true
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/icons/agrixo_splash.png
+
+  android: true
+  ios: true
+
+  android_12:
+    image: assets/icons/agrixo_splash.png
+    icon_background_color: "#FFFFFF"
