@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../models/transaction_model.dart';
+import '../models/category_model.dart';
+import '../models/expense_type_model.dart';
+
 import '../services/transaction_service.dart';
+import '../services/category_service.dart';
+import '../services/expense_type_service.dart';
 
 class AddExpenseDialog extends StatefulWidget {
   const AddExpenseDialog({super.key});
@@ -10,11 +16,28 @@ class AddExpenseDialog extends StatefulWidget {
 }
 
 class _AddExpenseDialogState extends State<AddExpenseDialog> {
-  String? category;
-  String? type;
+  // ===== DATA LISTS =====
+  List<CategoryModel> categories = [];
+  List<ExpenseTypeModel> expenseTypes = [];
 
+  // ===== SELECTED VALUES =====
+  CategoryModel? selectedCategory;
+  ExpenseTypeModel? selectedType;
+
+  // ===== LOADING STATES =====
+  bool isLoadingCategories = true;
+  bool isLoadingTypes = true;
+
+  // ===== CONTROLLERS =====
   final TextEditingController amountController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+    _loadExpenseTypes();
+  }
 
   @override
   void dispose() {
@@ -23,15 +46,49 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
     super.dispose();
   }
 
+  // =========================
+  // LOAD CATEGORIES
+  // =========================
+  Future<void> _loadCategories() async {
+    final list = await CategoryService.getLastCategories(
+      type: 'expense',
+      limit: 100,
+    );
+
+    setState(() {
+      categories = list;
+      isLoadingCategories = false;
+    });
+  }
+
+  // =========================
+  // LOAD EXPENSE TYPES
+  // =========================
+  Future<void> _loadExpenseTypes() async {
+    final list = await ExpenseTypeService.getExpenseTypes(
+      type: 'expense',
+    );
+
+    setState(() {
+      expenseTypes = list;
+      isLoadingTypes = false;
+    });
+  }
+
+  // =========================
+  // SAVE EXPENSE
+  // =========================
   Future<void> _saveExpense() async {
-    if (category == null || type == null || amountController.text.isEmpty) {
+    if (selectedCategory == null ||
+        selectedType == null ||
+        amountController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields')),
       );
       return;
     }
 
-    final amount = double.tryParse(amountController.text);
+    final amount = double.tryParse(amountController.text.trim());
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter a valid amount')),
@@ -41,21 +98,23 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
     final expense = TransactionModel(
       type: 'expense',
-      category: category!,
-      subType: type!,
+      category: selectedCategory!.name,
+      subType: selectedType!.name,
       amount: amount,
-      description: descriptionController.text,
-      crop: category!, // using category as crop for now
+      description: descriptionController.text.trim(),
+      crop: selectedCategory!.name,
       date: DateTime.now().toIso8601String().split('T').first,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
 
     await TransactionService.addExpense(expense);
-    await TransactionService.printAllTransactions();
 
-    Navigator.pop(context); // close dialog
+    Navigator.pop(context, true);
   }
 
+  // =========================
+  // UI
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -72,7 +131,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// HEADER
+                // ===== HEADER =====
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -93,50 +152,53 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
                 const SizedBox(height: 16),
 
-                /// CATEGORY
+                // ===== CATEGORY =====
                 const Text('Category'),
                 const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  initialValue: category,
-                  items: const [
-                    DropdownMenuItem(value: 'Papaya', child: Text('Papaya')),
-                    DropdownMenuItem(value: 'Banana', child: Text('Banana')),
-                    DropdownMenuItem(value: 'General', child: Text('General')),
-                  ],
-                  onChanged: (v) => setState(() => category = v),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                ),
+
+                isLoadingCategories
+                    ? const Center(child: CircularProgressIndicator())
+                    : DropdownButtonFormField<CategoryModel>(
+                        value: selectedCategory,
+                        items: categories.map((cat) {
+                          return DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat.name),
+                          );
+                        }).toList(),
+                        onChanged: (v) =>
+                            setState(() => selectedCategory = v),
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
 
                 const SizedBox(height: 16),
 
-                /// EXPENSE TYPE
+                // ===== EXPENSE TYPE =====
                 const Text('Type'),
                 const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  initialValue: type,
-                  items: const [
-                    DropdownMenuItem(
-                        value: 'Fertilizer', child: Text('Fertilizer')),
-                    DropdownMenuItem(
-                        value: 'Seed Purchase', child: Text('Seed Purchase')),
-                    DropdownMenuItem(
-                        value: 'Plant Purchase', child: Text('Plant Purchase')),
-                    DropdownMenuItem(value: 'Labour', child: Text('Labour')),
-                    DropdownMenuItem(
-                        value: 'Equipment', child: Text('Equipment')),
-                    DropdownMenuItem(value: 'Other', child: Text('Other')),
-                  ],
-                  onChanged: (v) => setState(() => type = v),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                ),
+
+                isLoadingTypes
+                    ? const Center(child: CircularProgressIndicator())
+                    : DropdownButtonFormField<ExpenseTypeModel>(
+                        value: selectedType,
+                        items: expenseTypes.map((t) {
+                          return DropdownMenuItem(
+                            value: t,
+                            child: Text('${t.emoji ?? ''} ${t.name}'),
+                          );
+                        }).toList(),
+                        onChanged: (v) =>
+                            setState(() => selectedType = v),
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
 
                 const SizedBox(height: 16),
 
-                /// AMOUNT
+                // ===== AMOUNT =====
                 const Text('Amount'),
                 const SizedBox(height: 6),
                 TextField(
@@ -151,7 +213,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
                 const SizedBox(height: 16),
 
-                /// DESCRIPTION
+                // ===== DESCRIPTION =====
                 const Text('Description'),
                 const SizedBox(height: 6),
                 TextField(
@@ -165,7 +227,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
                 const SizedBox(height: 24),
 
-                /// ACTION BUTTONS
+                // ===== ACTION BUTTONS =====
                 Row(
                   children: [
                     Expanded(

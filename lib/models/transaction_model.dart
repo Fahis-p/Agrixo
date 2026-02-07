@@ -21,6 +21,9 @@ class TransactionModel {
     required this.createdAt,
   });
 
+  // =========================
+  // TO MAP (MODEL → DB)
+  // =========================
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -33,5 +36,22 @@ class TransactionModel {
       'date': date,
       'createdAt': createdAt,
     };
+  }
+
+  // =========================
+  // FROM MAP (DB → MODEL)
+  // =========================
+  factory TransactionModel.fromMap(Map<String, dynamic> map) {
+    return TransactionModel(
+      id: map['id'],
+      type: map['type'],
+      category: map['category'],
+      subType: map['subType'],
+      amount: (map['amount'] as num).toDouble(),
+      description: map['description'] ?? '',
+      crop: map['crop'] ?? '',
+      date: map['date'],
+      createdAt: map['createdAt'],
+    );
   }
 }

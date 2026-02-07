@@ -129,4 +129,17 @@ Future<List<Map<String, dynamic>>> getExpenseTypes({
     limit: limit,
   );
 }
+
+Future<List<Map<String, dynamic>>> getTransactionsByDate(
+  String date,
+) async {
+  final db = await database;
+
+  return await db.query(
+    'transactions',
+    where: 'date = ?',
+    whereArgs: [date],
+    orderBy: 'createdAt DESC',
+  );
+}
 }

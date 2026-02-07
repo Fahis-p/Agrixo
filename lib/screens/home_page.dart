@@ -5,7 +5,10 @@ import '../widgets/add_expense_dialog.dart';
 import '../widgets/add_income_dialog.dart';
 import '../screens/configuration_page.dart';
 import '../models/category_model.dart';
+import '../models/transaction_model.dart';
 import '../services/category_service.dart';
+import '../services/transaction_service.dart';
+import '../services/expense_type_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,23 +19,101 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<CategoryModel> expenseCategories = [];
+  List<CategoryModel> incomeCategories = [];
+  List<TransactionModel> recentTransactions = [];
+  Map<String, String> transactionTypeEmojis = {};
+
+  double todayExpense = 0;
+  double todayIncome = 0;
+  double balance = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _loadExpCategories();
+    _loadIncCategories();
+    _loadDashboardData();
+    _loadTransactionTypeEmojis();
   }
 
-  Future<void> _loadCategories() async {
+  // ================= LOAD EXPENCE CATEGORIES =================
+  Future<void> _loadExpCategories() async {
     final list = await CategoryService.getLastCategories(
-    type: 'expense',
-    limit: 50,
-  );
+      type: 'expense',
+      limit: 50,
+    );
+
     setState(() {
       expenseCategories = list;
     });
   }
 
+  // ================= LOAD INCOME CATEGORIES =================
+  Future<void> _loadIncCategories() async {
+    final list = await CategoryService.getLastCategories(
+      type: 'income',
+      limit: 50,
+    );
+
+    setState(() {
+      incomeCategories = list;
+    });
+  }
+
+  // ================= LOAD DASHBOARD =================
+  Future<void> _loadDashboardData() async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    final transactions = await TransactionService.getTransactionsByDate(today);
+
+    double expense = 0;
+    double income = 0;
+
+    for (final t in transactions) {
+      if (t.type == 'expense') {
+        expense += t.amount;
+      } else if (t.type == 'income') {
+        income += t.amount;
+      }
+    }
+
+    setState(() {
+      todayExpense = expense;
+      todayIncome = income;
+      balance = income - expense;
+      recentTransactions = transactions.take(5).toList();
+    });
+  }
+
+  // ================= LOAD EMOJIS =================
+  Future<void> _loadTransactionTypeEmojis() async {
+    final expenseTypes = await ExpenseTypeService.getExpenseTypes(
+      type: 'expense',
+    );
+    final incomeTypes = await ExpenseTypeService.getExpenseTypes(
+      type: 'income',
+    );
+
+    final Map<String, String> map = {};
+
+    for (final t in expenseTypes) {
+      if (t.emoji != null && t.emoji!.isNotEmpty) {
+        map[t.name] = t.emoji!;
+      }
+    }
+
+    for (final t in incomeTypes) {
+      if (t.emoji != null && t.emoji!.isNotEmpty) {
+        map[t.name] = t.emoji!;
+      }
+    }
+
+    setState(() {
+      transactionTypeEmojis = map;
+    });
+  }
+
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,12 +141,13 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(builder: (_) => const ConfigurationPage()),
               );
-              _loadCategories(); // 🔄 refresh when coming back
+              _loadExpCategories();
+              _loadIncCategories();
+              _loadDashboardData();
             },
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -80,46 +162,59 @@ class _HomePageState extends State<HomePage> {
               'Today',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-
             const SizedBox(height: 24),
 
+            // ===== ADD EXPENSE =====
             _primaryButton(
               gradientColors: const [Color(0xFFD32F2F), Color(0xFFB71C1C)],
               icon: Icons.remove_circle_outline,
               text: 'Add Expense',
-              onTap: () {
-                showDialog(
+              onTap: () async {
+                await showDialog(
                   context: context,
                   barrierDismissible: false,
                   builder: (_) => const AddExpenseDialog(),
                 );
+                _loadDashboardData();
               },
             ),
 
             const SizedBox(height: 16),
 
+            // ===== ADD INCOME =====
             _primaryButton(
               gradientColors: const [Color(0xFF2E7D32), Color(0xFF1B5E20)],
               icon: Icons.add_circle_outline,
               text: 'Add Income',
-              onTap: () {
-                showDialog(
+              onTap: () async {
+                await showDialog(
                   context: context,
                   barrierDismissible: false,
                   builder: (_) => const AddIncomeDialog(),
                 );
+                _loadDashboardData();
               },
             ),
 
             const SizedBox(height: 28),
 
             const Text(
-              'Select Crop',
+              'Expence details',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
 
             _cropRow(),
+
+            const SizedBox(height: 12),
+
+            const Text(
+              'Income details',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+
+            _incomecategoryRow(),
 
             const SizedBox(height: 28),
 
@@ -131,26 +226,45 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
-            _transactionTile(
-              Icons.local_gas_station,
-              'Diesel',
-              '- ₹837',
-              Colors.red,
-            ),
-            _transactionTile(Icons.restaurant, 'Food', '- ₹300', Colors.red),
-            _transactionTile(
-              Icons.eco,
-              'Papaya Sale',
-              '+ ₹2,500',
-              Colors.green,
-            ),
+
+            recentTransactions.isEmpty
+                ? const Text(
+                    'No transactions today',
+                    style: TextStyle(color: Colors.black54),
+                  )
+                : Column(
+                    children: recentTransactions.map((t) {
+                      final isExpense = t.type == 'expense';
+
+                      final emoji = transactionTypeEmojis[t.subType];
+
+                      return ListTile(
+                        leading: emoji != null
+                            ? Text(emoji, style: const TextStyle(fontSize: 22))
+                            : Icon(
+                                isExpense
+                                    ? Icons.remove_circle
+                                    : Icons.add_circle,
+                                color: isExpense ? Colors.red : Colors.green,
+                              ),
+                        title: Text(t.subType),
+                        trailing: Text(
+                          '${isExpense ? '-' : '+'} ₹${t.amount.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            color: isExpense ? Colors.red : Colors.green,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
           ],
         ),
       ),
     );
   }
 
-  // ================= buttons =================
+  // ================= BUTTON =================
   Widget _primaryButton({
     required List<Color> gradientColors,
     required IconData icon,
@@ -190,7 +304,6 @@ class _HomePageState extends State<HomePage> {
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: textColor,
-                letterSpacing: 0.3,
               ),
             ),
           ],
@@ -200,7 +313,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ================= CROPS =================
-
   Widget _cropRow() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -214,7 +326,6 @@ class _HomePageState extends State<HomePage> {
               height: 40,
             ),
           ),
-
           ...expenseCategories.map((cat) {
             return _cropTile(
               name: cat.name,
@@ -227,7 +338,39 @@ class _HomePageState extends State<HomePage> {
                     )
                   : const Icon(Icons.category, size: 40),
             );
-          }).toList(),
+          }),
+        ],
+      ),
+    );
+  }
+  
+  // ================= CROPS =================
+  Widget _incomecategoryRow() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _cropTile(
+            name: 'All',
+            icon: Image.asset(
+              'assets/icons/crops/all.png',
+              width: 40,
+              height: 40,
+            ),
+          ),
+          ...incomeCategories.map((cat) {
+            return _cropTile(
+              name: cat.name,
+              icon: cat.iconPath != null
+                  ? Image.file(
+                      File(cat.iconPath!),
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    )
+                  : const Icon(Icons.category, size: 40),
+            );
+          }),
         ],
       ),
     );
@@ -251,7 +394,7 @@ class _HomePageState extends State<HomePage> {
             Text(
               name,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 12),
             ),
           ],
         ),
@@ -260,7 +403,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ================= SUMMARY =================
-
   Widget _summaryCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -269,16 +411,24 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        children: const [
-          _SummaryRow(label: 'Today Expense', value: '₹837', color: Colors.red),
-          Divider(),
+        children: [
+          _SummaryRow(
+            label: 'Today Expense',
+            value: '₹${todayExpense.toStringAsFixed(0)}',
+            color: Colors.red,
+          ),
+          const Divider(),
           _SummaryRow(
             label: 'Today Income',
-            value: '₹2,500',
+            value: '₹${todayIncome.toStringAsFixed(0)}',
             color: Colors.green,
           ),
-          Divider(),
-          _SummaryRow(label: 'Balance', value: '₹1,663', color: Colors.green),
+          const Divider(),
+          _SummaryRow(
+            label: 'Balance',
+            value: '₹${balance.toStringAsFixed(0)}',
+            color: balance >= 0 ? Colors.green : Colors.red,
+          ),
         ],
       ),
     );
@@ -286,7 +436,6 @@ class _HomePageState extends State<HomePage> {
 }
 
 // ================= SMALL WIDGETS =================
-
 class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
@@ -317,8 +466,13 @@ class _SummaryRow extends StatelessWidget {
   }
 }
 
-// ================= TRANSACTIONS =================
-_transactionTile(IconData icon, String title, String amount, Color color) {
+// ================= TRANSACTION TILE =================
+ListTile _transactionTile(
+  IconData icon,
+  String title,
+  String amount,
+  Color color,
+) {
   return ListTile(
     leading: Icon(icon, color: color),
     title: Text(title),
