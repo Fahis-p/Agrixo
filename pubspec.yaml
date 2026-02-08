@@ -38,6 +38,7 @@ dependencies:
   path: ^1.9.1
   image_picker: ^1.0.7
   path_provider: ^2.1.2
+  fl_chart: ^0.66.0
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +69,7 @@ flutter:
   assets:
     - assets/icons/crops/
     - assets/icons/
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
